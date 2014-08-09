@@ -1,0 +1,6 @@
+#!/bin/sh
+while true; do
+  nvidia-smi -q | grep Used
+  sleep 1
+done
+
