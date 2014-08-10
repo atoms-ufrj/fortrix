@@ -16,6 +16,7 @@
 module base_matrix_module
 
 use iso_c_binding
+
 use matrix_handler_cuda_module
 
 type, abstract :: base_matrix

@@ -1,12 +1,12 @@
-# Set TARGET to "cpu" or "gpu"
+# Set TARGET to "cuda" or "blas"
 # Set FLOAT to "single" or "double"
 # Set NBITS to "32" or "64"
-TARGET  = gpu
+TARGET  = cuda
 FLOAT   = double
 NBITS   = 64
 
 FORT    = gfortran
-FOPTS   = -O3 -march=native -ffast-math -funroll-loops -fstrict-aliasing -cpp -D$(FLOAT) -Darch$(NBITS) -Wunused
+FOPTS   = -O3 -march=native -ffast-math -funroll-loops -fstrict-aliasing -cpp -D$(TARGET) -D$(FLOAT) -Darch$(NBITS) -Wunused
 CC      = nvcc
 CCOPTS  = -O3 -arch sm_20
 
@@ -23,7 +23,7 @@ OBJDIR  = $(SRCDIR)/obj_$(TARGET)
 TSTSRC  = $(wildcard $(TSTDIR)/*.f90)
 TSTEXE  = $(TSTSRC:.f90=)
 
-ifeq ($(TARGET),gpu)
+ifeq ($(TARGET),cuda)
   ifeq ($(NBITS),64)
     LIBS = -L$(CUDADIR)/lib64 -lcudart -lcublas
   else
@@ -71,7 +71,7 @@ $(OBJDIR)/tmatrix_module.o: $(SRCDIR)/tmatrix_module.f90 $(OBJDIR)/base_matrix_m
 $(OBJDIR)/scalar_module.o: $(SRCDIR)/scalar_module.f90 $(OBJDIR)/base_matrix_module.o
 	$(FORT) $(FOPTS) -J$(OBJDIR) -c -o $@ $<
 
-$(OBJDIR)/base_matrix_module.o: $(SRCDIR)/base_matrix_module.f90 $(OBJDIR)/matrix_handler_cuda.o
+$(OBJDIR)/base_matrix_module.o: $(SRCDIR)/base_matrix_module.f90 $(OBJDIR)/matrix_handler_$(TARGET).o
 	$(FORT) $(FOPTS) -J$(OBJDIR) -c -o $@ $<
 
 $(OBJDIR)/matrix_handler_cuda.o: $(SRCDIR)/matrix_handler_cuda.f90 $(OBJDIR)/matrix_handler.o $(OBJDIR)/cuda_interface.o

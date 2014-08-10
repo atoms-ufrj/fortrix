@@ -391,44 +391,4 @@ interface
 
 end interface
 
-contains
-
-!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-! Error handling for CUBLAS functions:
-!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-  subroutine cublas( stat )
-    integer(c_int) :: stat
-    character(21) :: error
-    if (stat /= 0_c_int) then
-      select case (stat)
-        case (1);  error = "not initialized"
-        case (3);  error = "allocation failed"
-        case (7);  error = "invalid value"
-        case (8);  error = "architecture mismatch"
-        case (11); error = "mapping error"
-        case (13); error = "execution failed"
-        case (14); error = "internal error"
-      end select
-      write(*,'("Error using CUBLAS: ",A,".")') trim(error)
-      stop
-    end if
-  end subroutine cublas
-
-!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-! Error handling for CUDA API functions:
-!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-  subroutine cuda( stat )
-    integer(c_int) :: stat
-    if (stat /= 0) then
-      write(*,'("Error using CUDA.")')
-      stop
-    end if
-    ! Utilizar função:
-    !char *cudaGetErrorString (cudaError_t error)
-  end subroutine cuda
-
-!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 end module cuda_interface
