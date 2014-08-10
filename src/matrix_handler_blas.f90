@@ -15,43 +15,43 @@
 
 module matrix_handler_blas_module
 
-#if defined(double)
-#  define cudaRexp    cudaDexp
-#  define cudaRlog    cudaDlog
-#  define cudaRinv    cudaDinv
-#  define cudaRpow    cudaDpow
-#  define cudaRprod   cudaDprod
-#  define cudaRreplic cudaDreplic
-#  define cublasRcopy cublasDcopy
-#  define cublasRaxpy cublasDaxpy
-#  define cublasRscal cublasDscal
-#  define cublasRgbmv cublasDgbmv
-#  define cublasRgemv cublasDgemv
-#  define cublasRger  cublasDger
-#  define cublasRgemm cublasDgemm
-#  define cublasRgeam cublasDgeam
-#  define cublasRdgmm cublasDdgmm
-#else
-#  define cudaRexp    cudaSexp
-#  define cudaRlog    cudaSlog
-#  define cudaRinv    cudaSinv
-#  define cudaRpow    cudaSpow
-#  define cudaRprod   cudaSprod
-#  define cudaRreplic cudaSreplic
-#  define cublasRcopy cublasScopy
-#  define cublasRaxpy cublasSaxpy
-#  define cublasRscal cublasSscal
-#  define cublasRgbmv cublasSgbmv
-#  define cublasRgemv cublasSgemv
-#  define cublasRger  cublasSger
-#  define cublasRgemm cublasSgemm
-#  define cublasRgeam cublasSgeam
-#  define cublasRdgmm cublasSdgmm
-#endif
+!#if defined(double)
+!#  define cudaRexp    cudaDexp
+!#  define cudaRlog    cudaDlog
+!#  define cudaRinv    cudaDinv
+!#  define cudaRpow    cudaDpow
+!#  define cudaRprod   cudaDprod
+!#  define cudaRreplic cudaDreplic
+!#  define cublasRcopy cublasDcopy
+!#  define cublasRaxpy cublasDaxpy
+!#  define cublasRscal cublasDscal
+!#  define cublasRgbmv cublasDgbmv
+!#  define cublasRgemv cublasDgemv
+!#  define cublasRger  cublasDger
+!#  define cublasRgemm cublasDgemm
+!#  define cublasRgeam cublasDgeam
+!#  define cublasRdgmm cublasDdgmm
+!#else
+!#  define cudaRexp    cudaSexp
+!#  define cudaRlog    cudaSlog
+!#  define cudaRinv    cudaSinv
+!#  define cudaRpow    cudaSpow
+!#  define cudaRprod   cudaSprod
+!#  define cudaRreplic cudaSreplic
+!#  define cublasRcopy cublasScopy
+!#  define cublasRaxpy cublasSaxpy
+!#  define cublasRscal cublasSscal
+!#  define cublasRgbmv cublasSgbmv
+!#  define cublasRgemv cublasSgemv
+!#  define cublasRger  cublasSger
+!#  define cublasRgemm cublasSgemm
+!#  define cublasRgeam cublasSgeam
+!#  define cublasRdgmm cublasSdgmm
+!#endif
 
 use iso_c_binding
 use matrix_handler_module
-use cuda_interface
+!use cuda_interface
 
 implicit none
 
@@ -94,42 +94,41 @@ contains
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   subroutine matrix_handler_blas_initialize( this, thread )
-
     class(matrix_handler_blas), intent(inout) :: this
     integer,                    intent(in)    :: thread
-
-    integer(c_int) :: ndevs, device
-
-    call cuda( cudaGetDeviceCount(ndevs) )
-    write(*,'("Number of CUDA-enabled devices available is ",I2,".")') ndevs
-    device = mod(thread,ndevs)
-    call cuda( cudaSetDevice( device ) )
-    write(*,'("Calculations performed in device ",I2,".")') device
-    call cublas( cublasCreate( this % handle ) )
-    write(*,'("CUBLAS library context successfully created.")')
-    call cublas( cublasSetPointerMode( this % handle, CUBLAS_POINTER_MODE_DEVICE ) )
-    write(*,'("CUBLAS pointer mode set to ""device"". ")')
-    call this % allocate( this % zero, 1 )
-    call this % upload( 1, [0.0_rb], this % zero )
-    call this % allocate( this % one, 1 )
-    call this % upload( 1, [1.0_rb], this % one )
-    call this % allocate( this % minus_one, 1 )
-    call this % upload( 1, [-1.0_rb], this % minus_one )
-
+!    integer(c_int) :: ndevs, device, stat
+!    stat = cudaGetDeviceCount(ndevs)
+!    if (stat /= 0) stop "Error using CUDA."
+!    write(*,'("Number of CUDA-enabled devices available is ",I2,".")') ndevs
+!    device = mod(thread,ndevs)
+!    stat = cudaSetDevice( device )
+!    if (stat /= 0) stop "Error using CUDA."
+!    write(*,'("Calculations performed in device ",I2,".")') device
+!    stat = cublasCreate( this % handle )
+!    if (stat /= 0) stop "Error using CUBLAS."
+!    write(*,'("CUBLAS library context successfully created.")')
+!    stat = cublasSetPointerMode( this % handle, CUBLAS_POINTER_MODE_DEVICE )
+!    if (stat /= 0) stop "Error using CUBLAS."
+!    write(*,'("CUBLAS pointer mode set to ""device"". ")')
+!    call this % allocate( this % zero, 1 )
+!    call this % upload( 1, [0.0_rb], this % zero )
+!    call this % allocate( this % one, 1 )
+!    call this % upload( 1, [1.0_rb], this % one )
+!    call this % allocate( this % minus_one, 1 )
+!    call this % upload( 1, [-1.0_rb], this % minus_one )
   end subroutine matrix_handler_blas_initialize
 
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   subroutine matrix_handler_blas_finalize( this )
-
     class(matrix_handler_blas), intent(inout) :: this
-
-    call this % deallocate( this % zero )
-    call this % deallocate( this % one )
-    call this % deallocate( this % minus_one )
-    call cublas( cublasDestroy( this % handle ) )
-    write(*,'("CUBLAS library context successfully destroyed. ")')
-
+!    integer(c_int) :: stat
+!    call this % deallocate( this % zero )
+!    call this % deallocate( this % one )
+!    call this % deallocate( this % minus_one )
+!    stat = cublasDestroy( this % handle )
+!    if (stat /= 0) stop "Error using CUBLAS."
+!    write(*,'("CUBLAS library context successfully destroyed. ")')
   end subroutine matrix_handler_blas_finalize
 
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -138,7 +137,9 @@ contains
   subroutine matrix_handler_blas_allocate( x, n )
     type(c_ptr),    intent(inout) :: x
     integer(c_int), intent(in)    :: n
-    call cuda( cudaMalloc( x, int(n*rb,c_size_t) ) )
+!    integer(c_int) :: stat
+!    stat = cudaMalloc( x, int(n*rb,c_size_t) )
+!    if (stat /= 0) stop "Error using CUDA."
   end subroutine matrix_handler_blas_allocate
 
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -146,7 +147,9 @@ contains
   !> Frees the device memory space pointed by x.
   subroutine matrix_handler_blas_deallocate( x )
     type(c_ptr), intent(inout) :: x
-    call cuda( cudaFree( x ) )
+!    integer(c_int) :: stat
+!    stat = cudaFree( x )
+!    if (stat /= 0) stop "Error using CUDA."
   end subroutine matrix_handler_blas_deallocate
 
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -156,9 +159,11 @@ contains
     integer(c_int), intent(in)         :: n
     real(rb),       intent(in), target :: x(*)
     type(c_ptr),    intent(in)         :: y
-    type(c_ptr) :: xp
-    xp = c_loc(x(1))
-    call cublas( cublasSetVector( n, crb, xp, one, y, one ) )
+!    integer(c_int) :: stat
+!    type(c_ptr)    :: xp
+!    xp = c_loc(x(1))
+!    stat = cublasSetVector( n, crb, xp, one, y, one )
+!    if (stat /= 0) stop "Error using CUBLAS."
   end subroutine matrix_handler_blas_upload
 
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -168,9 +173,11 @@ contains
     integer(c_int), intent(in)         :: n
     type(c_ptr),    intent(in)         :: x
     real(rb),       intent(in), target :: y(*)
-    type(c_ptr) :: yp
-    yp = c_loc(y(1))
-    call cublas( cublasGetVector( n, crb, x, one, yp, one ) )
+!    integer(c_int) :: stat
+!    type(c_ptr)    :: yp
+!    yp = c_loc(y(1))
+!    stat = cublasGetVector( n, crb, x, one, yp, one )
+!    if (stat /= 0) stop "Error using CUBLAS."
   end subroutine matrix_handler_blas_download
 
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -181,7 +188,9 @@ contains
     integer(c_int),             intent(in) :: n
     type(c_ptr),                intent(in) :: x
     type(c_ptr),                intent(in) :: y
-    call cublas( cublasRcopy( this % handle, n, x, one, y, one ) )
+!    integer(c_int) :: stat
+!    stat = cublasRcopy( this % handle, n, x, one, y, one )
+!    if (stat /= 0) stop "Error using CUBLAS."
   end subroutine matrix_handler_blas_copy
 
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -192,7 +201,9 @@ contains
     integer(c_int),             intent(in) :: n
     type(c_ptr),                intent(in) :: x
     type(c_ptr),                intent(in) :: y
-    call cublas( cublasRscal( this % handle, n, x, y, one ) )
+!    integer(c_int) :: stat
+!    stat = cublasRscal( this % handle, n, x, y, one )
+!    if (stat /= 0) stop "Error using CUBLAS."
   end subroutine matrix_handler_blas_scale
 
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -202,7 +213,7 @@ contains
     integer(c_int), intent(in) :: n
     type(c_ptr),    intent(in) :: x
     type(c_ptr),    intent(in) :: y
-    call cudaRreplic( n, x, y )
+!    call cudaRreplic( n, x, y )
   end subroutine matrix_handler_blas_replicate
 
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -213,7 +224,9 @@ contains
     integer(c_int),             intent(in) :: n
     type(c_ptr),                intent(in) :: x
     type(c_ptr),                intent(in) :: y
-    call cublas( cublasRaxpy( this % handle, n, this % one, x, one, y, one ) )
+!    integer(c_int) :: stat
+!    stat = cublasRaxpy( this % handle, n, this % one, x, one, y, one )
+!    if (stat /= 0) stop "Error using CUBLAS."
   end subroutine matrix_handler_blas_add
 
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -224,7 +237,9 @@ contains
     integer(c_int),             intent(in) :: n
     type(c_ptr),                intent(in) :: x
     type(c_ptr),                intent(in) :: y
-    call cublas( cublasRaxpy( this % handle, n, this % minus_one, x, one, y, one ) )
+!    integer(c_int) :: stat
+!    stat = cublasRaxpy( this % handle, n, this % minus_one, x, one, y, one )
+!    if (stat /= 0) stop "Error using CUBLAS."
   end subroutine matrix_handler_blas_subtract
 
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -235,7 +250,9 @@ contains
     integer(c_int),             intent(in) :: n
     type(c_ptr),                intent(in) :: x
     type(c_ptr),                intent(in) :: y
-    call cublas( cublasRaxpy( this % handle, n, this % one, x, one, y, n ) )
+!    integer(c_int) :: stat
+!    stat = cublasRaxpy( this % handle, n, this % one, x, one, y, n )
+!    if (stat /= 0) stop "Error using CUBLAS."
   end subroutine matrix_handler_blas_add_diag
 
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -246,7 +263,9 @@ contains
     integer(c_int),             intent(in) :: n
     type(c_ptr),                intent(in) :: x
     type(c_ptr),                intent(in) :: y
-    call cublas( cublasRaxpy( this % handle, n, this % minus_one, x, one, y, n ) )
+!    integer(c_int) :: stat
+!    stat = cublasRaxpy( this % handle, n, this % minus_one, x, one, y, n )
+!    if (stat /= 0) stop "Error using CUBLAS."
   end subroutine matrix_handler_blas_subt_diag
 
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -256,7 +275,7 @@ contains
     integer(c_int), intent(in) :: n
     type(c_ptr),    intent(in) :: x
     type(c_ptr),    intent(in) :: y
-    call cudaRprod( n, x, y )
+!    call cudaRprod( n, x, y )
   end subroutine matrix_handler_blas_multiply
 
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -265,7 +284,7 @@ contains
   subroutine matrix_handler_blas_exp( n, x )
     integer(c_int), intent(in) :: n
     type(c_ptr),    intent(in) :: x
-    call cudaRexp( n, x )
+!    call cudaRexp( n, x )
   end subroutine matrix_handler_blas_exp
 
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -274,7 +293,7 @@ contains
   subroutine matrix_handler_blas_log( n, x )
     integer(c_int), intent(in) :: n
     type(c_ptr),    intent(in) :: x
-    call cudaRlog( n, x )
+!    call cudaRlog( n, x )
   end subroutine matrix_handler_blas_log
 
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -283,7 +302,7 @@ contains
   subroutine matrix_handler_blas_inv( n, x )
     integer(c_int), intent(in) :: n
     type(c_ptr),    intent(in) :: x
-    call cudaRinv( n, x )
+!    call cudaRinv( n, x )
   end subroutine matrix_handler_blas_inv
 
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -292,7 +311,7 @@ contains
   subroutine matrix_handler_blas_pow( n, x, y )
     integer(c_int), intent(in) :: n
     type(c_ptr),    intent(in) :: x, y
-    call cudaRpow( n, y, x )
+!    call cudaRpow( n, y, x )
   end subroutine matrix_handler_blas_pow
 
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -302,7 +321,9 @@ contains
     class(matrix_handler_blas), intent(inout) :: this
     integer(c_int),             intent(in)    :: m, n
     type(c_ptr),                intent(in)    :: x, y
-    call cublas( cublasRgeam( this%handle, one, one, n, m, this%one, x, m, this%zero, x, m, y, n ) )
+!    integer(c_int) :: stat
+!    stat = cublasRgeam( this%handle, one, one, n, m, this%one, x, m, this%zero, x, m, y, n )
+!    if (stat /= 0) stop "Error using CUBLAS."
   end subroutine matrix_handler_blas_transpose
 
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -312,7 +333,9 @@ contains
     class(matrix_handler_blas), intent(inout) :: this
     integer(c_int),             intent(in)    :: m, n
     type(c_ptr),                intent(in)    :: x, y, z
-    call cublas( cublasRgeam( this%handle, zero, one, m, n, this%one, x, m, this%one, y, n, z, m ) )
+!    integer(c_int) :: stat
+!    stat = cublasRgeam( this%handle, zero, one, m, n, this%one, x, m, this%one, y, n, z, m )
+!    if (stat /= 0) stop "Error using CUBLAS."
   end subroutine matrix_handler_blas_add_transp
 
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -322,7 +345,9 @@ contains
     class(matrix_handler_blas), intent(inout) :: this
     integer(c_int),             intent(in)    :: m, n
     type(c_ptr),                intent(in)    :: x, y, z
-    call cublas( cublasRgeam( this%handle, zero, one, m, n, this%one, x, m, this%minus_one, y, n, z, m ) )
+!    integer(c_int) :: stat
+!    stat = cublasRgeam( this%handle, zero, one, m, n, this%one, x, m, this%minus_one, y, n, z, m )
+!    if (stat /= 0) stop "Error using CUBLAS."
   end subroutine matrix_handler_blas_subt_transp
 
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -332,7 +357,9 @@ contains
     class(matrix_handler_blas), intent(inout) :: this
     integer(c_int),             intent(in)    :: m, k, n
     type(c_ptr),                intent(in)    :: x, y, z
-    call cublas( cublasRgemm( this%handle, zero, zero, m, n, k, this%one, x, m, y, k, this%zero, z, m ) )
+!    integer(c_int) :: stat
+!    stat = cublasRgemm( this%handle, zero, zero, m, n, k, this%one, x, m, y, k, this%zero, z, m )
+!    if (stat /= 0) stop "Error using CUBLAS."
   end subroutine matrix_handler_blas_product_mm
 
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -342,7 +369,9 @@ contains
     class(matrix_handler_blas), intent(inout) :: this
     integer(c_int),             intent(in)    :: m, k, n
     type(c_ptr),                intent(in)    :: x, y, z
-    call cublas( cublasRgemm( this%handle, zero, one, m, n, k, this%one, x, m, y, n, this%zero, z, m ) )
+!    integer(c_int) :: stat
+!    stat = cublasRgemm( this%handle, zero, one, m, n, k, this%one, x, m, y, n, this%zero, z, m )
+!    if (stat /= 0) stop "Error using CUBLAS."
   end subroutine matrix_handler_blas_product_mt
 
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -352,7 +381,9 @@ contains
     class(matrix_handler_blas), intent(inout) :: this
     integer(c_int),             intent(in)    :: m, k, n
     type(c_ptr),                intent(in)    :: x, y, z
-    call cublas( cublasRgemm( this%handle, one, zero, m, n, k, this%one, x, k, y, k, this%zero, z, m ) )
+!    integer(c_int) :: stat
+!    stat = cublasRgemm( this%handle, one, zero, m, n, k, this%one, x, k, y, k, this%zero, z, m )
+!    if (stat /= 0) stop "Error using CUBLAS."
   end subroutine matrix_handler_blas_product_tm
 
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -362,7 +393,9 @@ contains
     class(matrix_handler_blas), intent(inout) :: this
     integer(c_int),             intent(in)    :: m, n
     type(c_ptr),                intent(in)    :: x, y, z
-    call cublas( cublasRdgmm( this%handle, one, m, n, x, m, y, one, z, m ) )
+!    integer(c_int) :: stat
+!    stat = cublasRdgmm( this%handle, one, m, n, x, m, y, one, z, m )
+!    if (stat /= 0) stop "Error using CUBLAS."
   end subroutine matrix_handler_blas_product_md
 
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -372,7 +405,9 @@ contains
     class(matrix_handler_blas), intent(inout) :: this
     integer(c_int),             intent(in)    :: m, n
     type(c_ptr),                intent(in)    :: x, y, z
-    call cublas( cublasRdgmm( this%handle, zero, m, n, y, m, x, one, z, m ) )
+!    integer(c_int) :: stat
+!    stat = cublasRdgmm( this%handle, zero, m, n, y, m, x, one, z, m )
+!    if (stat /= 0) stop "Error using CUBLAS."
   end subroutine matrix_handler_blas_product_dm
 
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

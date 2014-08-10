@@ -77,6 +77,9 @@ $(OBJDIR)/base_matrix_module.o: $(SRCDIR)/base_matrix_module.f90 $(OBJDIR)/matri
 $(OBJDIR)/matrix_handler_cuda.o: $(SRCDIR)/matrix_handler_cuda.f90 $(OBJDIR)/matrix_handler.o $(OBJDIR)/cuda_interface.o
 	$(FORT) $(FOPTS) -J$(OBJDIR) -c -o $@ $<
 
+$(OBJDIR)/matrix_handler_blas.o: $(SRCDIR)/matrix_handler_blas.f90 $(OBJDIR)/matrix_handler.o
+	$(FORT) $(FOPTS) -J$(OBJDIR) -c -o $@ $<
+
 $(OBJDIR)/cuda_interface.o: $(SRCDIR)/cuda_interface.f90 $(OBJDIR)/cublas_v2_fortran.o
 	$(FORT) $(FOPTS) -J$(OBJDIR) -c -o $@ $<
 

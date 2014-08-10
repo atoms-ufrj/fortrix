@@ -17,7 +17,13 @@ module base_matrix_module
 
 use iso_c_binding
 
+#if defined(cuda)
 use matrix_handler_cuda_module
+#endif
+
+#if defined(blas)
+use matrix_handler_blas_module
+#endif
 
 type, abstract :: base_matrix
 
@@ -61,7 +67,11 @@ abstract interface
 
 end interface
 
+#if defined(cuda)
 type(matrix_handler_cuda) :: mproc
+#else
+type(matrix_handler_blas) :: mproc
+#endif
 
 contains
 
