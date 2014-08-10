@@ -137,6 +137,7 @@ contains
   subroutine matrix_handler_blas_allocate( x, n )
     type(c_ptr),    intent(inout) :: x
     integer(c_int), intent(in)    :: n
+    
 !    integer(c_int) :: stat
 !    stat = cudaMalloc( x, int(n*rb,c_size_t) )
 !    if (stat /= 0) stop "Error using CUDA."

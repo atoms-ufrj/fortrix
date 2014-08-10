@@ -1,7 +1,7 @@
 # Set TARGET to "cuda" or "blas"
 # Set FLOAT to "single" or "double"
 # Set NBITS to "32" or "64"
-TARGET  = cuda
+TARGET  = blas
 FLOAT   = double
 NBITS   = 64
 
@@ -43,6 +43,12 @@ build: $(OBJDIR)/fortrix.o
 
 clean:
 	rm -rf $(OBJDIR)
+	rm -rf $(LIBDIR)
+	rm -rf $(INCDIR)
+	rm -f $(TSTEXE)
+
+clean-all:
+	rm -rf $(SRCDIR)/obj_*
 	rm -rf $(LIBDIR)
 	rm -rf $(INCDIR)
 	rm -f $(TSTEXE)
