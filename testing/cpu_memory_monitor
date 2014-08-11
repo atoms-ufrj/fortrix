@@ -1,4 +1,9 @@
 #!/bin/sh
+if [ "$#" -ne 1 ]; then
+  echo "usage: $0 <process name>"
+  exit
+fi
+
 while true; do
   ps v -C $1 | grep $1
   sleep 1

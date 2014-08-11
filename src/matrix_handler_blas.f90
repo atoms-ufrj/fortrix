@@ -20,11 +20,15 @@ module matrix_handler_blas_module
 #  define transfer_blas_array transfer_blas_array_double
 #  define Rcopy Dcopy
 #  define Rscal Dscal
+#  define Raxpy Daxpy
+#  define Rgemm Dgemm
 #else
 #  define allocate_blas_array allocate_blas_array_single
 #  define transfer_blas_array transfer_blas_array_single
 #  define Rcopy Scopy
 #  define Rscal Sscal
+#  define Raxpy Saxpy
+#  define Rgemm Sgemm
 #endif
 
 use iso_c_binding
@@ -35,6 +39,10 @@ implicit none
 integer, parameter, private :: zero = 0, &
                                one  = 1, &
                                crb  = int(rb,c_int)
+
+real(rb), parameter, private :: r_zero = 0.0_rb, &
+                                r_one = 1.0_rb,  &
+                                r_minus_one = -1.0_rb
 
 type, extends(matrix_handler) :: matrix_handler_blas
   contains
@@ -205,7 +213,12 @@ contains
     integer(c_int), intent(in) :: n
     type(c_ptr),    intent(in) :: x
     type(c_ptr),    intent(in) :: y
-!    call cudaRreplic( n, x, y )
+    real(rb), pointer :: xf, yf(:)
+    call c_f_pointer( x, xf )
+    call c_f_pointer( y, yf, [n] )
+    yf = xf
+print*, yf
+stop "subroutine matrix_handler_blas_replicate"
   end subroutine matrix_handler_blas_replicate
 
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -216,9 +229,10 @@ contains
     integer(c_int),             intent(in) :: n
     type(c_ptr),                intent(in) :: x
     type(c_ptr),                intent(in) :: y
-!    integer(c_int) :: stat
-!    stat = cublasRaxpy( this % handle, n, this % one, x, one, y, one )
-!    if (stat /= 0) stop "Error using CUBLAS."
+    real(rb), pointer :: xf(:), yf(:)
+    call c_f_pointer( x, xf, [n] )
+    call c_f_pointer( y, yf, [n] )
+    call Raxpy( n, r_one, xf, one, yf, one )
   end subroutine matrix_handler_blas_add
 
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -229,9 +243,10 @@ contains
     integer(c_int),             intent(in) :: n
     type(c_ptr),                intent(in) :: x
     type(c_ptr),                intent(in) :: y
-!    integer(c_int) :: stat
-!    stat = cublasRaxpy( this % handle, n, this % minus_one, x, one, y, one )
-!    if (stat /= 0) stop "Error using CUBLAS."
+    real(rb), pointer :: xf(:), yf(:)
+    call c_f_pointer( x, xf, [n] )
+    call c_f_pointer( y, yf, [n] )
+    call Raxpy( n, r_minus_one, xf, one, yf, one )
   end subroutine matrix_handler_blas_subtract
 
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -242,9 +257,10 @@ contains
     integer(c_int),             intent(in) :: n
     type(c_ptr),                intent(in) :: x
     type(c_ptr),                intent(in) :: y
-!    integer(c_int) :: stat
-!    stat = cublasRaxpy( this % handle, n, this % one, x, one, y, n )
-!    if (stat /= 0) stop "Error using CUBLAS."
+    real(rb), pointer :: xf(:), yf(:)
+    call c_f_pointer( x, xf, [n] )
+    call c_f_pointer( y, yf, [n] )
+    call Raxpy( n, r_one, xf, one, yf, n )
   end subroutine matrix_handler_blas_add_diag
 
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -255,9 +271,10 @@ contains
     integer(c_int),             intent(in) :: n
     type(c_ptr),                intent(in) :: x
     type(c_ptr),                intent(in) :: y
-!    integer(c_int) :: stat
-!    stat = cublasRaxpy( this % handle, n, this % minus_one, x, one, y, n )
-!    if (stat /= 0) stop "Error using CUBLAS."
+    real(rb), pointer :: xf(:), yf(:)
+    call c_f_pointer( x, xf, [n] )
+    call c_f_pointer( y, yf, [n] )
+    call Raxpy( n, r_minus_one, xf, one, yf, n )
   end subroutine matrix_handler_blas_subt_diag
 
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -267,7 +284,10 @@ contains
     integer(c_int), intent(in) :: n
     type(c_ptr),    intent(in) :: x
     type(c_ptr),    intent(in) :: y
-!    call cudaRprod( n, x, y )
+    real(rb), pointer :: xf(:), yf(:)
+    call c_f_pointer( x, xf, [n] )
+    call c_f_pointer( y, yf, [n] )
+    yf = xf * yf
   end subroutine matrix_handler_blas_multiply
 
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -276,7 +296,9 @@ contains
   subroutine matrix_handler_blas_exp( n, x )
     integer(c_int), intent(in) :: n
     type(c_ptr),    intent(in) :: x
-!    call cudaRexp( n, x )
+    real(rb), pointer :: xf(:)
+    call c_f_pointer( x, xf, [n] )
+    xf = exp(xf)
   end subroutine matrix_handler_blas_exp
 
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -285,7 +307,9 @@ contains
   subroutine matrix_handler_blas_log( n, x )
     integer(c_int), intent(in) :: n
     type(c_ptr),    intent(in) :: x
-!    call cudaRlog( n, x )
+    real(rb), pointer :: xf(:)
+    call c_f_pointer( x, xf, [n] )
+    xf = log(xf)
   end subroutine matrix_handler_blas_log
 
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -294,7 +318,9 @@ contains
   subroutine matrix_handler_blas_inv( n, x )
     integer(c_int), intent(in) :: n
     type(c_ptr),    intent(in) :: x
-!    call cudaRinv( n, x )
+    real(rb), pointer :: xf(:)
+    call c_f_pointer( x, xf, [n] )
+    xf = 1.0_rb / xf
   end subroutine matrix_handler_blas_inv
 
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -303,7 +329,10 @@ contains
   subroutine matrix_handler_blas_pow( n, x, y )
     integer(c_int), intent(in) :: n
     type(c_ptr),    intent(in) :: x, y
-!    call cudaRpow( n, y, x )
+    real(rb), pointer :: xf, yf(:)
+    call c_f_pointer( x, xf )
+    call c_f_pointer( y, yf, [n] )
+    yf = yf ** xf
   end subroutine matrix_handler_blas_pow
 
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -313,33 +342,45 @@ contains
     class(matrix_handler_blas), intent(inout) :: this
     integer(c_int),             intent(in)    :: m, n
     type(c_ptr),                intent(in)    :: x, y
-!    integer(c_int) :: stat
-!    stat = cublasRgeam( this%handle, one, one, n, m, this%one, x, m, this%zero, x, m, y, n )
-!    if (stat /= 0) stop "Error using CUBLAS."
+    real(rb), pointer :: xf(:,:), yf(:,:)
+    call c_f_pointer( x, xf, [m,n] )
+    call c_f_pointer( y, yf, [n,m] )
+    yf = transpose(xf)
   end subroutine matrix_handler_blas_transpose
 
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+!## NEEDS CHECKING
 
   !> Adds the transpose of an n-by-m matrix y to the m-by-n matrix x and saves the result in z.
   subroutine matrix_handler_blas_add_transp( this, m, n, x, y, z )
     class(matrix_handler_blas), intent(inout) :: this
     integer(c_int),             intent(in)    :: m, n
     type(c_ptr),                intent(in)    :: x, y, z
-!    integer(c_int) :: stat
-!    stat = cublasRgeam( this%handle, zero, one, m, n, this%one, x, m, this%one, y, n, z, m )
-!    if (stat /= 0) stop "Error using CUBLAS."
+    real(rb), pointer :: xf(:,:), yf(:,:), zf(:,:)
+    call c_f_pointer( x, xf, [m,n] )
+    call c_f_pointer( y, yf, [n,m] )
+    call c_f_pointer( z, zf, [m,n] )
+    zf = transpose(yf)
+    call Raxpy( n*m, r_one, xf, one, zf, one )
   end subroutine matrix_handler_blas_add_transp
 
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+!## NEEDS CHECKING
 
   !> Subtracts the transpose of an n-by-m matrix y from the m-by-n matrix x and saves the result in z.
   subroutine matrix_handler_blas_subt_transp( this, m, n, x, y, z )
     class(matrix_handler_blas), intent(inout) :: this
     integer(c_int),             intent(in)    :: m, n
     type(c_ptr),                intent(in)    :: x, y, z
-!    integer(c_int) :: stat
-!    stat = cublasRgeam( this%handle, zero, one, m, n, this%one, x, m, this%minus_one, y, n, z, m )
-!    if (stat /= 0) stop "Error using CUBLAS."
+    real(rb), pointer :: xf(:,:), yf(:,:), zf(:,:)
+    call c_f_pointer( x, xf, [m,n] )
+    call c_f_pointer( y, yf, [n,m] )
+    call c_f_pointer( z, zf, [m,n] )
+    zf = transpose(yf)
+    call Raxpy( n*m, r_minus_one, xf, one, zf, one )
+    call Rscal( n*m, r_minus_one, zf, one )
   end subroutine matrix_handler_blas_subt_transp
 
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -349,9 +390,11 @@ contains
     class(matrix_handler_blas), intent(inout) :: this
     integer(c_int),             intent(in)    :: m, k, n
     type(c_ptr),                intent(in)    :: x, y, z
-!    integer(c_int) :: stat
-!    stat = cublasRgemm( this%handle, zero, zero, m, n, k, this%one, x, m, y, k, this%zero, z, m )
-!    if (stat /= 0) stop "Error using CUBLAS."
+    real(rb), pointer :: xf(:), yf(:), zf(:)
+    call c_f_pointer( x, xf, [m*k] )
+    call c_f_pointer( y, yf, [k*n] )
+    call c_f_pointer( z, zf, [m*n] )
+    call Rgemm( "N", "N", m, n, k, r_one, xf, m, yf, k, r_zero, zf, m )
   end subroutine matrix_handler_blas_product_mm
 
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -361,9 +404,11 @@ contains
     class(matrix_handler_blas), intent(inout) :: this
     integer(c_int),             intent(in)    :: m, k, n
     type(c_ptr),                intent(in)    :: x, y, z
-!    integer(c_int) :: stat
-!    stat = cublasRgemm( this%handle, zero, one, m, n, k, this%one, x, m, y, n, this%zero, z, m )
-!    if (stat /= 0) stop "Error using CUBLAS."
+    real(rb), pointer :: xf(:), yf(:), zf(:)
+    call c_f_pointer( x, xf, [m*k] )
+    call c_f_pointer( y, yf, [k*n] )
+    call c_f_pointer( z, zf, [m*n] )
+    call Rgemm( "N", "T", m, n, k, r_one, xf, m, yf, n, r_zero, zf, m )
   end subroutine matrix_handler_blas_product_mt
 
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -373,9 +418,11 @@ contains
     class(matrix_handler_blas), intent(inout) :: this
     integer(c_int),             intent(in)    :: m, k, n
     type(c_ptr),                intent(in)    :: x, y, z
-!    integer(c_int) :: stat
-!    stat = cublasRgemm( this%handle, one, zero, m, n, k, this%one, x, k, y, k, this%zero, z, m )
-!    if (stat /= 0) stop "Error using CUBLAS."
+    real(rb), pointer :: xf(:), yf(:), zf(:)
+    call c_f_pointer( x, xf, [m*k] )
+    call c_f_pointer( y, yf, [k*n] )
+    call c_f_pointer( z, zf, [m*n] )
+    call Rgemm( "T", "N", m, n, k, r_one, xf, k, yf, k, r_zero, zf, m )
   end subroutine matrix_handler_blas_product_tm
 
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

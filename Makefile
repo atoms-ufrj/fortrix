@@ -1,9 +1,7 @@
 # Set TARGET to "cuda" or "blas"
 # Set FLOAT to "single" or "double"
-# Set NBITS to "32" or "64"
 TARGET  = blas
 FLOAT   = double
-NBITS   = 64
 
 FORT    = gfortran
 FOPTS   = -O3 -march=native -ffast-math -funroll-loops -fstrict-aliasing -cpp -D$(TARGET) -D$(FLOAT) -Darch$(NBITS) -Wunused
@@ -15,10 +13,8 @@ else
   CCOPTS  = -O3
 endif
 
-CUDADIR = /usr/local/cuda
-BLASDIR = /usr/local/atlas
-
-BLASLIB = -L$(BLASDIR)/lib -lf77blas -latlas
+CUDADIR = /usr/lib/x86_64-linux-gnu
+BLASDIR = /usr/local/atlas/lib
 
 SRCDIR  = ./src
 LIBDIR  = ./lib
@@ -30,13 +26,9 @@ TSTSRC  = $(wildcard $(TSTDIR)/*.f90)
 TSTEXE  = $(TSTSRC:.f90=)
 
 ifeq ($(TARGET),cuda)
-  ifeq ($(NBITS),64)
-    LIBS = -L$(CUDADIR)/lib64 -lcudart -lcublas
-  else
-    LIBS = -L$(CUDADIR)/lib -lcudart -lcublas
-  endif
+  LIBS = -L$(CUDADIR) -lcudart -lcublas
 else
-  LIBS = $(BLASLIB)
+  LIBS = -L$(BLASDIR) -lsatlas
 endif
 
 all: lib
@@ -59,7 +51,7 @@ clean-all:
 	rm -rf $(INCDIR)
 	rm -f $(TSTEXE)
 
-$(TSTDIR)/%: $(TSTDIR)/%.f90 $(LIBDIR)/libfortrix.a
+$(TSTDIR)/%: $(TSTDIR)/%.f90 $(TSTDIR)/binary_entrywise_operation.f $(LIBDIR)/libfortrix.a
 	$(FORT) $(FOPTS) -o $@ -I$(INCDIR) -I$(OBJDIR) $< -L$(LIBDIR) -lfortrix $(LIBS)
 
 $(LIBDIR)/libfortrix.a: $(OBJDIR)/fortrix.o
