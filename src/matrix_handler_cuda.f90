@@ -208,7 +208,7 @@ contains
 
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  !> Replicate the first entry of pointer x as the n first entries of pointer y.
+  !> Make the n first entries of pointer y equal to the first entry of pointer x.
   subroutine matrix_handler_cuda_replicate( n, x, y )
     integer(c_int), intent(in) :: n
     type(c_ptr),    intent(in) :: x

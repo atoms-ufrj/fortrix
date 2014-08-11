@@ -15,49 +15,26 @@
 
 module matrix_handler_blas_module
 
-!#if defined(double)
-!#  define cudaRexp    cudaDexp
-!#  define cudaRlog    cudaDlog
-!#  define cudaRinv    cudaDinv
-!#  define cudaRpow    cudaDpow
-!#  define cudaRprod   cudaDprod
-!#  define cudaRreplic cudaDreplic
-!#  define cublasRcopy cublasDcopy
-!#  define cublasRaxpy cublasDaxpy
-!#  define cublasRscal cublasDscal
-!#  define cublasRgbmv cublasDgbmv
-!#  define cublasRgemv cublasDgemv
-!#  define cublasRger  cublasDger
-!#  define cublasRgemm cublasDgemm
-!#  define cublasRgeam cublasDgeam
-!#  define cublasRdgmm cublasDdgmm
-!#else
-!#  define cudaRexp    cudaSexp
-!#  define cudaRlog    cudaSlog
-!#  define cudaRinv    cudaSinv
-!#  define cudaRpow    cudaSpow
-!#  define cudaRprod   cudaSprod
-!#  define cudaRreplic cudaSreplic
-!#  define cublasRcopy cublasScopy
-!#  define cublasRaxpy cublasSaxpy
-!#  define cublasRscal cublasSscal
-!#  define cublasRgbmv cublasSgbmv
-!#  define cublasRgemv cublasSgemv
-!#  define cublasRger  cublasSger
-!#  define cublasRgemm cublasSgemm
-!#  define cublasRgeam cublasSgeam
-!#  define cublasRdgmm cublasSdgmm
-!#endif
+#if defined(double)
+#  define allocate_blas_array allocate_blas_array_double
+#  define transfer_blas_array transfer_blas_array_double
+#  define Rcopy Dcopy
+#  define Rscal Dscal
+#else
+#  define allocate_blas_array allocate_blas_array_single
+#  define transfer_blas_array transfer_blas_array_single
+#  define Rcopy Scopy
+#  define Rscal Sscal
+#endif
 
 use iso_c_binding
 use matrix_handler_module
-!use cuda_interface
 
 implicit none
 
-integer(c_int), parameter, private :: zero = 0_c_int, &
-                                      one  = 1_c_int, &
-                                      crb  = int(rb,c_int)
+integer, parameter, private :: zero = 0, &
+                               one  = 1, &
+                               crb  = int(rb,c_int)
 
 type, extends(matrix_handler) :: matrix_handler_blas
   contains
@@ -88,6 +65,27 @@ type, extends(matrix_handler) :: matrix_handler_blas
     procedure, pass   :: product_md  => matrix_handler_blas_product_md
     procedure, pass   :: product_dm  => matrix_handler_blas_product_dm
 end type matrix_handler_blas
+
+interface
+
+  subroutine allocate_blas_array( array, n ) bind(C)
+    import :: c_ptr, c_int
+    type(c_ptr)           :: array
+    integer(c_int), value :: n
+  end subroutine
+
+  subroutine deallocate_blas_array( array ) bind(C)
+    import :: c_ptr
+    type(c_ptr), value :: array
+  end subroutine
+
+  subroutine transfer_blas_array( dest, source, n ) bind(C)
+    import :: c_ptr, c_int
+    type(c_ptr),    value :: dest, source
+    integer(c_int), value :: n
+  end subroutine
+
+end interface
 
 contains
 
@@ -137,10 +135,7 @@ contains
   subroutine matrix_handler_blas_allocate( x, n )
     type(c_ptr),    intent(inout) :: x
     integer(c_int), intent(in)    :: n
-    
-!    integer(c_int) :: stat
-!    stat = cudaMalloc( x, int(n*rb,c_size_t) )
-!    if (stat /= 0) stop "Error using CUDA."
+    call allocate_blas_array( x, n )
   end subroutine matrix_handler_blas_allocate
 
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -148,9 +143,7 @@ contains
   !> Frees the device memory space pointed by x.
   subroutine matrix_handler_blas_deallocate( x )
     type(c_ptr), intent(inout) :: x
-!    integer(c_int) :: stat
-!    stat = cudaFree( x )
-!    if (stat /= 0) stop "Error using CUDA."
+    call deallocate_blas_array( x )
   end subroutine matrix_handler_blas_deallocate
 
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -160,11 +153,9 @@ contains
     integer(c_int), intent(in)         :: n
     real(rb),       intent(in), target :: x(*)
     type(c_ptr),    intent(in)         :: y
-!    integer(c_int) :: stat
-!    type(c_ptr)    :: xp
-!    xp = c_loc(x(1))
-!    stat = cublasSetVector( n, crb, xp, one, y, one )
-!    if (stat /= 0) stop "Error using CUBLAS."
+    type(c_ptr)    :: xp
+    xp = c_loc(x(1))
+    call transfer_blas_array( y, xp, n )
   end subroutine matrix_handler_blas_upload
 
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -174,11 +165,9 @@ contains
     integer(c_int), intent(in)         :: n
     type(c_ptr),    intent(in)         :: x
     real(rb),       intent(in), target :: y(*)
-!    integer(c_int) :: stat
-!    type(c_ptr)    :: yp
-!    yp = c_loc(y(1))
-!    stat = cublasGetVector( n, crb, x, one, yp, one )
-!    if (stat /= 0) stop "Error using CUBLAS."
+    type(c_ptr)    :: yp
+    yp = c_loc(y(1))
+    call transfer_blas_array( yp, x, n )
   end subroutine matrix_handler_blas_download
 
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -189,9 +178,10 @@ contains
     integer(c_int),             intent(in) :: n
     type(c_ptr),                intent(in) :: x
     type(c_ptr),                intent(in) :: y
-!    integer(c_int) :: stat
-!    stat = cublasRcopy( this % handle, n, x, one, y, one )
-!    if (stat /= 0) stop "Error using CUBLAS."
+    real(rb), pointer :: xf(:), yf(:)
+    call c_f_pointer( x, xf, [n] )
+    call c_f_pointer( y, yf, [n] )
+    call Rcopy( n, xf, one, yf, one )
   end subroutine matrix_handler_blas_copy
 
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -202,14 +192,15 @@ contains
     integer(c_int),             intent(in) :: n
     type(c_ptr),                intent(in) :: x
     type(c_ptr),                intent(in) :: y
-!    integer(c_int) :: stat
-!    stat = cublasRscal( this % handle, n, x, y, one )
-!    if (stat /= 0) stop "Error using CUBLAS."
+    real(rb), pointer :: xf(:), yf(:)
+    call c_f_pointer( x, xf, [n] )
+    call c_f_pointer( y, yf, [n] )
+    call Rscal( n, xf, yf, one )
   end subroutine matrix_handler_blas_scale
 
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  !> Replicate the first entry of pointer x as the n first entries of pointer y.
+  !> Make the n first entries of pointer y equal to the first entry of pointer x.
   subroutine matrix_handler_blas_replicate( n, x, y )
     integer(c_int), intent(in) :: n
     type(c_ptr),    intent(in) :: x

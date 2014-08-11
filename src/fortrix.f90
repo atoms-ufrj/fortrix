@@ -126,7 +126,7 @@ interface log
   module procedure :: log_matrix
 end interface
 
-interface D
+interface Diag
   module procedure :: diag_matrix
   module procedure :: diag_tmatrix
 end interface

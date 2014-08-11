@@ -4,7 +4,7 @@ use Fortrix
 
 type(matrix) :: A, B
 type(scalar) :: S, T
-type(dmatrix) :: D, E
+type(dmatrix) :: D1, E
 
 call Fortrix_Startup()
 
@@ -73,21 +73,21 @@ do while (.true.)
   call A%deallocate()
 
   write(*,'(/,"Testing first matrix assigment from a diagonal matrix...")')
-  D = .d.new_matrix([real(rb) :: 1,2,3,4 ])
+  D1 = .d.new_matrix([real(rb) :: 1,2,3,4 ])
   print*
-  call print_matrix( D, "F6.1" )
+  call print_matrix( D1, "F6.1" )
 
   write(*,'(/,"Testing second matrix assigment from a diagonal matrix...")')
-  D = .d.new_matrix([real(rb) :: 1,2,3,4 ])
+  D1 = .d.new_matrix([real(rb) :: 1,2,3,4 ])
   print*
-  call print_matrix( D, "F6.1" )
+  call print_matrix( D1, "F6.1" )
 
   write(*,'(/,"Testing matrix assigment from a permanent diagonal matrix...")')
-  E = D
+  E = D1
   print*
   call print_matrix( E, "F6.1" )
 
-  call D%deallocate()
+  call D1	%deallocate()
   call E%deallocate()
 
 !  write(*,'(/,"Testing first matrix assigment from a temporary scalar...")')
