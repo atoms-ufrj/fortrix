@@ -2,10 +2,10 @@ program preunifac
 
 implicit none
 
-integer :: inp, io, i, j, ntotal, nc, nsg, iMain, nmg
+integer :: inp, out, io, i, j, ntotal, nc, nsg, iMain, nmg
 real(8) :: iR, iQ, Aij, Aji, Bij, Bji, Cij, Cji
 character(100) :: name
-character(256) :: compound_file, group_file, parameter_file
+character(256) :: compound_file, group_file, parameter_file, output_file
 type tcompound
   character(100) :: name
   integer :: nsg
@@ -154,7 +154,18 @@ do while ((io == 0).and.(i > 0).and.(i <= ntotal))
 end do
 close(inp)
 
+output_file = trim(compound(1) % name)
+do i = 2, nc
+  output_file = trim(output_file)//"_"//trim(compound(i) % name)
+end do
+output_file = trim(output_file)//".m"
+
 call print_all( 6 )
+
+open( newunit = out, file = output_file, status = "replace" )
+call print_all( out )
+close(out)
+write(*,'(/,"Results available in file ",A)') trim(output_file)
 
 contains
 

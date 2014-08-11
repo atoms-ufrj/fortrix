@@ -217,8 +217,6 @@ contains
     call c_f_pointer( x, xf )
     call c_f_pointer( y, yf, [n] )
     yf = xf
-print*, yf
-stop "subroutine matrix_handler_blas_replicate"
   end subroutine matrix_handler_blas_replicate
 
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -343,14 +341,15 @@ stop "subroutine matrix_handler_blas_replicate"
     integer(c_int),             intent(in)    :: m, n
     type(c_ptr),                intent(in)    :: x, y
     real(rb), pointer :: xf(:,:), yf(:,:)
+    integer :: i
     call c_f_pointer( x, xf, [m,n] )
     call c_f_pointer( y, yf, [n,m] )
-    yf = transpose(xf)
+    do i = 1, n
+      call Rcopy( m, xf(1,i), one, yf(i,1), n )
+    end do
   end subroutine matrix_handler_blas_transpose
 
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-!## NEEDS CHECKING
 
   !> Adds the transpose of an n-by-m matrix y to the m-by-n matrix x and saves the result in z.
   subroutine matrix_handler_blas_add_transp( this, m, n, x, y, z )
@@ -358,16 +357,17 @@ stop "subroutine matrix_handler_blas_replicate"
     integer(c_int),             intent(in)    :: m, n
     type(c_ptr),                intent(in)    :: x, y, z
     real(rb), pointer :: xf(:,:), yf(:,:), zf(:,:)
+    integer :: i
     call c_f_pointer( x, xf, [m,n] )
     call c_f_pointer( y, yf, [n,m] )
     call c_f_pointer( z, zf, [m,n] )
-    zf = transpose(yf)
+    do i = 1, m
+      call Rcopy( n, yf(1,i), one, zf(i,1), m )
+    end do
     call Raxpy( n*m, r_one, xf, one, zf, one )
   end subroutine matrix_handler_blas_add_transp
 
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-!## NEEDS CHECKING
 
   !> Subtracts the transpose of an n-by-m matrix y from the m-by-n matrix x and saves the result in z.
   subroutine matrix_handler_blas_subt_transp( this, m, n, x, y, z )
@@ -375,12 +375,15 @@ stop "subroutine matrix_handler_blas_replicate"
     integer(c_int),             intent(in)    :: m, n
     type(c_ptr),                intent(in)    :: x, y, z
     real(rb), pointer :: xf(:,:), yf(:,:), zf(:,:)
+    integer :: i
     call c_f_pointer( x, xf, [m,n] )
     call c_f_pointer( y, yf, [n,m] )
     call c_f_pointer( z, zf, [m,n] )
-    zf = transpose(yf)
-    call Raxpy( n*m, r_minus_one, xf, one, zf, one )
+    do i = 1, m
+      call Rcopy( n, yf(1,i), one, zf(i,1), m )
+    end do
     call Rscal( n*m, r_minus_one, zf, one )
+    call Raxpy( n*m, r_one, xf, one, zf, one )
   end subroutine matrix_handler_blas_subt_transp
 
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -432,9 +435,15 @@ stop "subroutine matrix_handler_blas_replicate"
     class(matrix_handler_blas), intent(inout) :: this
     integer(c_int),             intent(in)    :: m, n
     type(c_ptr),                intent(in)    :: x, y, z
-!    integer(c_int) :: stat
-!    stat = cublasRdgmm( this%handle, one, m, n, x, m, y, one, z, m )
-!    if (stat /= 0) stop "Error using CUBLAS."
+    real(rb), pointer :: xf(:), yf(:), zf(:)
+    integer :: i
+    call c_f_pointer( x, xf, [m*n] )
+    call c_f_pointer( y, yf, [n] )
+    call c_f_pointer( z, zf, [m*n] )
+    call Rcopy( m*n, xf, one, zf, one )
+    do i = 1, n
+      call Rscal( m, yf(i), zf, m )
+    end do
   end subroutine matrix_handler_blas_product_md
 
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -444,9 +453,15 @@ stop "subroutine matrix_handler_blas_replicate"
     class(matrix_handler_blas), intent(inout) :: this
     integer(c_int),             intent(in)    :: m, n
     type(c_ptr),                intent(in)    :: x, y, z
-!    integer(c_int) :: stat
-!    stat = cublasRdgmm( this%handle, zero, m, n, y, m, x, one, z, m )
-!    if (stat /= 0) stop "Error using CUBLAS."
+    real(rb), pointer :: xf(:), yf(:), zf(:)
+    integer :: i
+    call c_f_pointer( x, xf, [m] )
+    call c_f_pointer( y, yf, [m*n] )
+    call c_f_pointer( z, zf, [m*n] )
+    call Rcopy( m*n, yf, one, zf, one )
+    do i = 1, m
+      call Rscal( n, xf(i), zf, one )
+    end do
   end subroutine matrix_handler_blas_product_dm
 
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -1,11 +1,24 @@
-#!/bin/sh
+#!/bin/bash
+
 if [ "$#" -ne 1 ]; then
-  echo "usage: $0 <process name>"
-  exit
+  echo "usage: $0 <executable file>"; exit
 fi
 
+name=$1
+if [ ! -f $name ]; then
+  echo "error: file '$1' does not exist"; exit
+fi
+
+./$name loop &
+pid=$!
+
+trap '' INT
+
+echo "Monitoring memory usage of process $name:"
 while true; do
-  ps v -C $1 | grep $1
-  sleep 1
+  output=$(grep VmSize /proc/$pid/status)
+  echo "$output - press ENTER to stop"
+  read -t 2 && break
 done
 
+kill $pid

@@ -1,6 +1,25 @@
-#!/bin/sh
+#!/bin/bash
+
+if [ "$#" -ne 1 ]; then
+  echo "usage: $0 <executable file>"; exit
+fi
+
+name=$1
+if [ ! -f $name ]; then
+  echo "error: file '$1' does not exist"; exit
+fi
+
+./$name loop &
+pid=$!
+
+trap '' INT
+
+echo "Monitoring GPU memory usage:"
 while true; do
-  nvidia-smi -q | grep Used
-  sleep 1
+  output=$(nvidia-smi -q | grep -A 3 "FB Memory Usage" | grep Used | cut -d ':' -f2)
+  echo "$output - press ENTER to stop"
+  read -t 2 && break
 done
+
+kill $pid
 

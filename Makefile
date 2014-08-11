@@ -1,6 +1,6 @@
 # Set TARGET to "cuda" or "blas"
 # Set FLOAT to "single" or "double"
-TARGET  = blas
+TARGET  = cuda
 FLOAT   = double
 
 FORT    = gfortran
