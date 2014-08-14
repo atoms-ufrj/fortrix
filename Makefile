@@ -81,7 +81,7 @@ $(OBJDIR)/base_matrix_module.o: $(SRCDIR)/base_matrix_module.f90 $(OBJDIR)/matri
 $(OBJDIR)/matrix_handler_cuda.o: $(SRCDIR)/matrix_handler_cuda.f90 $(OBJDIR)/matrix_handler.o $(OBJDIR)/cuda_interface.o
 	$(FORT) $(FOPTS) -J$(OBJDIR) -c -o $@ $<
 
-$(OBJDIR)/matrix_handler_blas.o: $(SRCDIR)/matrix_handler_blas.f90 $(OBJDIR)/matrix_handler.o $(OBJDIR)/blas_arrays.o
+$(OBJDIR)/matrix_handler_blas.o: $(SRCDIR)/matrix_handler_blas.f90 $(OBJDIR)/matrix_handler.o $(OBJDIR)/arrays.o
 	$(FORT) $(FOPTS) -J$(OBJDIR) -c -o $@ $<
 
 $(OBJDIR)/cuda_interface.o: $(SRCDIR)/cuda_interface.f90 $(OBJDIR)/cublas_v2_fortran.o
@@ -90,7 +90,7 @@ $(OBJDIR)/cuda_interface.o: $(SRCDIR)/cuda_interface.f90 $(OBJDIR)/cublas_v2_for
 $(OBJDIR)/cublas_v2_fortran.o: $(SRCDIR)/cublas_v2_fortran.c $(SRCDIR)/cublas_v2_fortran.h $(OBJDIR)/cuda_operations.o
 	$(CC) $(CCOPTS) -c -I$(CUDADIR)/include -o $@ $<
 
-$(OBJDIR)/blas_arrays.o: $(SRCDIR)/blas_arrays.c $(SRCDIR)/blas_arrays.h
+$(OBJDIR)/arrays.o: $(SRCDIR)/arrays.c $(SRCDIR)/arrays.h
 	mkdir -p $(OBJDIR)
 	$(CC) $(CCOPTS) -c -o $@ $<
 

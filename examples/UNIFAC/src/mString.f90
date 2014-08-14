@@ -1,13 +1,32 @@
 module mString
 
-use mGlobal
-
 implicit none
 
+integer,      parameter :: rb = 8
+integer,      parameter :: sl = 256
+character(3), parameter :: csl = "256"
 character(2), parameter, private :: delimiters = achar(32)//achar(9)
-character,    parameter, private :: comment_mark = "#"
+character(2), parameter, private :: comment_mark = "//"
 
 contains
+
+  !=================================================================================================
+
+  subroutine error( msg, msg1, msg2, msg3, msg4, msg5, msg6, msg7, msg8, msg9 )
+    character(*), intent(in)           :: msg
+    character(*), intent(in), optional :: msg1, msg2, msg3, msg4, msg5, msg6, msg7, msg8, msg9
+    write(*,'("ERROR: ",A)',advance='no') trim(msg)
+    if (present(msg1)) write(*,'(" ",A)',advance='no') trim(msg1)
+    if (present(msg2)) write(*,'(" ",A)',advance='no') trim(msg2)
+    if (present(msg3)) write(*,'(" ",A)',advance='no') trim(msg3)
+    if (present(msg4)) write(*,'(" ",A)',advance='no') trim(msg4)
+    if (present(msg5)) write(*,'(" ",A)',advance='no') trim(msg5)
+    if (present(msg6)) write(*,'(" ",A)',advance='no') trim(msg6)
+    if (present(msg7)) write(*,'(" ",A)',advance='no') trim(msg7)
+    if (present(msg8)) write(*,'(" ",A)',advance='no') trim(msg8)
+    if (present(msg9)) write(*,'(" ",A)',advance='no') trim(msg9)
+    write(*,'()')
+  end subroutine error
 
   !=================================================================================================
 
@@ -157,22 +176,18 @@ contains
 
   !=================================================================================================
 
-  function str2int( str ) result( i )
+  elemental function str2int( str ) result( i )
     character(*), intent(in) :: str
     integer                  :: i
-    integer :: ioerr
-    read(str,*,iostat=ioerr) i
-    if (ioerr /= 0) call error( "bad integer" )
+    read(str,*) i
   end function str2int
 
   !=================================================================================================
 
-  function str2real( str ) result( r )
+  elemental function str2real( str ) result( r )
     character(*), intent(in) :: str
     real(rb)                 :: r
-    integer :: ioerr
-    read(str,*,iostat=ioerr) r
-    if (ioerr /= 0) call error( "bad real number" )
+    read(str,*) r
   end function str2real
 
   !=================================================================================================

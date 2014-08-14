@@ -1,11 +1,13 @@
 program preunifac
 
+use scilab_style
+
 implicit none
 
 integer :: inp, out, io, i, j, ntotal, nc, nsg, iMain, nmg
 real(8) :: iR, iQ, Aij, Aji, Bij, Bji, Cij, Cji
 character(100) :: name
-character(256) :: compound_file, group_file, parameter_file, output_file
+character(256) :: compound_file, group_file, parameter_file, mixture
 type tcompound
   character(100) :: name
   integer :: nsg
@@ -14,6 +16,7 @@ end type tcompound
 type(tcompound), allocatable :: compound(:), aux(:)
 integer, allocatable :: iaux(:), index(:), nu(:,:), Main(:), M(:,:)
 real(8), allocatable :: R(:), Q(:), A(:,:,:)
+type(scilab_matrix_list) :: list
 
 ! Read file names:
 write(*,'("Enter names of the compound, group, and parameter files:")')
@@ -103,6 +106,7 @@ do i = 1, nc
     nu(i,index(compound(i) % index(j))) = compound(i) % nrep(j)
   end do
 end do
+call list % add( "nu", real(nu,rb) )
 
 ! Retrieve parameters of involved subgroups:
 allocate( Main(nsg), R(nsg), Q(nsg) )
@@ -119,6 +123,8 @@ do while ((io == 0).and.(i > 0).and.(i <= ntotal))
   read(inp,'(I5,A15,I5,A17,2F12.0)',iostat=io) i, name, iMain, name, iR, iQ
 end do
 close(inp)
+call list % add( "R", R )
+call list % add( "Q", Q )
 
 ! Build the selection matrix:
 ntotal = maxval(Main)
@@ -136,6 +142,7 @@ end do
 allocate( M(nsg,nmg) )
 M = 0
 forall(i=1:nsg) M(i,index(Main(i))) = 1
+call list % add( "M", real(M,rb) )
 
 ! Retrieve interaction parameters:
 allocate( A(3,nmg,nmg) )
@@ -153,70 +160,20 @@ do while ((io == 0).and.(i > 0).and.(i <= ntotal))
   read(inp,'(I7,I8,6F13.0)',iostat=io) i, j, Aij, Aji, Bij, Bji, Cij, Cji
 end do
 close(inp)
+call list % add( "A", A(1,:,:) )
+call list % add( "B", A(2,:,:) )
+call list % add( "C", A(3,:,:) )
 
-output_file = trim(compound(1) % name)
+mixture = trim(compound(1) % name)
 do i = 2, nc
-  output_file = trim(output_file)//"_"//trim(compound(i) % name)
+  mixture = trim(mixture)//"_"//trim(compound(i) % name)
 end do
-output_file = trim(output_file)//".m"
 
-call print_all( 6 )
+call list % print( 6 )
 
-open( newunit = out, file = output_file, status = "replace" )
-call print_all( out )
+open( newunit = out, file = trim(mixture)//".sci", status = "replace" )
+call list % print( out )
 close(out)
-write(*,'(/,"Results available in file ",A)') trim(output_file)
-
-contains
-
-  subroutine print_all( unit )
-    integer, intent(in) :: unit
-
-    character(3) :: cn, mat = "ABC"
-
-    write(unit,'("nc  = ",I3,";")') nc
-    write(unit,'("nsg = ",I3,";")') nsg
-    write(unit,'("nmg = ",I3,";")') nmg
-
-    ! Print the incidence matrix:
-    write(unit,'(/,"nu = [")')
-    write(cn,'(I3)') nsg
-    do i = 1, nc
-      write(unit,'('//cn//'I3)') nu(i,:)
-    end do
-    write(unit,'("];")')
-
-    ! Print volume and area parameters:
-    write(unit,'(/,"R = [")')
-    do i = 1, nsg
-      write(unit,'(F7.4)') R(i)
-    end do
-    write(unit,'("];")')
-
-    write(unit,'(/,"Q = [")')
-    do i = 1, nsg
-      write(unit,'(F7.4)') Q(i)
-    end do
-    write(unit,'("];")')
-
-    ! Print the selection matrix:
-    write(unit,'(/,"M = [")')
-    write(cn,'(I3)') nmg
-    do i = 1, nsg
-      write(unit,'('//cn//'I3)') M(i,:)
-    end do
-    write(unit,'("];")')
-
-    ! Print interaction parameter matrices:
-    mat = "ABC"
-    do i = 1, 3
-      write(unit,'(/,A1," = [")') mat(i:i)
-      do j = 1, nmg
-        write(unit,'('//cn//'F12.4)') A(i,j,:)
-      end do
-      write(unit,'("];")')
-    end do
-
-  end subroutine print_all
+write(*,'(/,"Results available in file ",A)') trim(mixture)//".sci"
 
 end program preunifac
