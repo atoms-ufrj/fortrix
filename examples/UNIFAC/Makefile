@@ -37,4 +37,3 @@ $(OBJDIR)/mString.o: $(SRCDIR)/mString.f90
 	mkdir -p $(OBJDIR)
 	$(FORT) $(FOPTS) -J$(OBJDIR) -c -o $@ $<
 
-
